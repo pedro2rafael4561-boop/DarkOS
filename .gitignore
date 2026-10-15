@@ -22,9 +22,9 @@ product.overrides.json
 *.snap.actual
 .vscode-test
 
-# Void added these:
+# DarkOS added these:
 .tmp/
 .tmp2/
 .tool-versions
-src/vs/workbench/contrib/void/browser/react/out/**
-src/vs/workbench/contrib/void/browser/react/src2/**
+src/vs/workbench/contrib/darkos/browser/react/out/**
+src/vs/workbench/contrib/darkos/browser/react/src2/**

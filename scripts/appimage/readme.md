@@ -7,7 +7,7 @@ This is a community-made AppImage creation script.
 There are some reported bugs with it.
 
 To generate an AppImage yourself, feel free to look at
-stable-linux.yml in the separate `void-builder/` repo,
+stable-linux.yml in the separate `DarkOS-builder/` repo,
 which runs a GitHub Action that builds the AppImage you see on our website.
 
 
