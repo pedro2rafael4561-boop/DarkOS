@@ -23,6 +23,7 @@ import { IRefreshModelService } from '../../../../../../../workbench/contrib/dar
 import { IVoidSettingsService } from '../../../../../../../workbench/contrib/darkos/common/darkosSettingsService.js';
 import { IExtensionTransferService } from '../../../../../../../workbench/contrib/darkos/browser/extensionTransferService.js'
 import { IMainProcessService } from '../../../../../../../platform/ipc/common/mainProcessService.js'
+import { IDarkOSCheckpointService, CheckpointsState } from '../../../../browser/darkosCheckpointService.js'
 
 import { IInstantiationService } from '../../../../../../../platform/instantiation/common/instantiation.js'
 import { ICodeEditorService } from '../../../../../../../editor/browser/services/codeEditorService.js'
@@ -84,6 +85,9 @@ const activeURIListeners: Set<(uri: URI | null) => void> = new Set();
 
 const mcpListeners: Set<() => void> = new Set()
 
+let checkpointsState: CheckpointsState = { checkpoints: [] }
+const checkpointsStateListeners: Set<(s: CheckpointsState) => void> = new Set()
+
 
 // must call this before you can use any of the hooks below
 // this should only be called ONCE! this is the only place you don't need to dispose onDidChange. If you use state.onDidChange anywhere else, make sure to dispose it!
@@ -102,9 +106,18 @@ export const _registerServices = (accessor: ServicesAccessor) => {
 		darkosCommandBarService: accessor.get(IDarkOSCommandBarService),
 		modelService: accessor.get(IModelService),
 		mcpService: accessor.get(IMCPService),
+		checkpointService: accessor.get(IDarkOSCheckpointService),
 	}
 
-	const { settingsStateService, chatThreadsStateService, refreshModelService, themeService, editCodeService, darkosCommandBarService, modelService, mcpService } = stateServices
+	const { settingsStateService, chatThreadsStateService, refreshModelService, themeService, editCodeService, darkosCommandBarService, modelService, mcpService, checkpointService } = stateServices
+
+	checkpointsState = checkpointService.state
+	disposables.push(
+		checkpointService.onDidChangeState(() => {
+			checkpointsState = checkpointService.state
+			checkpointsStateListeners.forEach(l => l(checkpointsState))
+		})
+	)
 
 
 
@@ -231,6 +244,7 @@ const getReactAccessor = (accessor: ServicesAccessor) => {
 
 		IStorageService: accessor.get(IStorageService),
 		IMainProcessService: accessor.get(IMainProcessService),
+		IDarkOSCheckpointService: accessor.get(IDarkOSCheckpointService),
 
 	} as const
 	return reactAccessor
@@ -426,5 +440,15 @@ export const useIsOptedOut = () => {
 		return () => disposables.clear()
 	}, [storageService, getVal])
 
+	return s
+}
+
+export const useCheckpointsState = () => {
+	const [s, ss] = useState(checkpointsState)
+	useEffect(() => {
+		ss(checkpointsState)
+		checkpointsStateListeners.add(ss)
+		return () => { checkpointsStateListeners.delete(ss) }
+	}, [ss])
 	return s
 }
