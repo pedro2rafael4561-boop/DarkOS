@@ -452,3 +452,9 @@ export const useCheckpointsState = () => {
 	}, [ss])
 	return s
 }
+
+export const useDarkOSCheckpointService = () => {
+	const accessor = useAccessor()
+	return accessor.IDarkOSCheckpointService
+}
+
