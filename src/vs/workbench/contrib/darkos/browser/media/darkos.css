@@ -202,3 +202,17 @@
 .void-scrollable-element *::-webkit-scrollbar-corner {
 	background-color: var(--void-bg-3) !important;
 }
+
+.darkos-logo-image {
+	background-image: url('./darkos_icon.png');
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+.darkos-banner-image {
+	background-image: url('./darkos_banner.png');
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+}

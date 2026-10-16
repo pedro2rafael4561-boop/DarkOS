@@ -55,30 +55,8 @@ export const DarkOSOnboarding = () => {
 };
 
 const DarkOSLogoIcon = () => (
-	<div className="relative flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/30 to-violet-900/40 border border-purple-500/40 shadow-[0_0_30px_rgba(157,78,221,0.35)]">
-		<svg width="38" height="38" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-			<path
-				d="M20 20 H55 C72 20 84 32 84 50 C84 68 72 80 55 80 H20 V20 Z"
-				stroke="url(#neon-purple)"
-				strokeWidth="9"
-				strokeLinejoin="round"
-				fill="rgba(157, 78, 221, 0.15)"
-			/>
-			<path
-				d="M38 38 H52 C60 38 66 43 66 50 C66 57 60 62 52 62 H38 V38 Z"
-				fill="url(#neon-purple-inner)"
-			/>
-			<defs>
-				<linearGradient id="neon-purple" x1="0%" y1="0%" x2="100%" y2="100%">
-					<stop offset="0%" stopColor="#c77dff" />
-					<stop offset="100%" stopColor="#7b2cbf" />
-				</linearGradient>
-				<linearGradient id="neon-purple-inner" x1="0%" y1="0%" x2="100%" y2="100%">
-					<stop offset="0%" stopColor="#e0aaff" />
-					<stop offset="100%" stopColor="#9d4edd" />
-				</linearGradient>
-			</defs>
-		</svg>
+	<div className="relative flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-violet-950/40 border border-purple-500/30 shadow-[0_0_25px_rgba(157,78,221,0.35)] p-1.5">
+		<div className="w-full h-full darkos-logo-image filter drop-shadow-[0_0_10px_rgba(199,125,255,0.5)]" />
 	</div>
 );
 
