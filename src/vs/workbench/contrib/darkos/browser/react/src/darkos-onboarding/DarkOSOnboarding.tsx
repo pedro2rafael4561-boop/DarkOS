@@ -3,649 +3,644 @@
  *  Licensed under the Apache License, Version 2.0. See LICENSE.txt for more information.
  *--------------------------------------------------------------------------------------*/
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useAccessor, useIsDark, useSettingsState } from '../util/services.js';
-import { Brain, Check, ChevronRight, DollarSign, ExternalLink, Lock, X } from 'lucide-react';
-import { displayInfoOfProviderName, ProviderName, providerNames, localProviderNames, featureNames, FeatureName, isFeatureNameDisabled } from '../../../../common/darkosSettingsTypes.js';
-import { ChatMarkdownRender } from '../markdown/ChatMarkdownRender.js';
-import { OllamaSetupInstructions, OneClickSwitchButton, SettingsForProvider, ModelDump } from '../darkos-settings-tsx/Settings.js';
-import { ColorScheme } from '../../../../../../../platform/theme/common/theme.js';
+import {
+	Check,
+	ChevronRight,
+	AlertTriangle,
+	ShieldCheck,
+	Cpu,
+	HardDrive,
+	Play,
+	Pause,
+	RotateCcw,
+	Sparkles,
+	Lock,
+	ArrowRight,
+	Loader2,
+} from 'lucide-react';
+import { SettingsForProvider } from '../darkos-settings-tsx/Settings.js';
 import ErrorBoundary from '../sidebar-tsx/ErrorBoundary.js';
-import { isLinux } from '../../../../../../../base/common/platform.js';
+import { HardwareInfo, OllamaStatus, PullProgressEvent } from '../../electron-main/darkosAiPrepChannel.js';
 
-const OVERRIDE_VALUE = false
+const OVERRIDE_VALUE = false;
 
 export const DarkOSOnboarding = () => {
-
-	const voidSettingsState = useSettingsState()
-	const isOnboardingComplete = voidSettingsState.globalSettings.isOnboardingComplete || OVERRIDE_VALUE
-
-	const isDark = useIsDark()
+	const voidSettingsState = useSettingsState();
+	const isOnboardingComplete = voidSettingsState.globalSettings.isOnboardingComplete || OVERRIDE_VALUE;
+	const isDark = useIsDark();
 
 	return (
 		<div className={`@@void-scope ${isDark ? 'dark' : ''}`}>
 			<div
 				className={`
-					bg-void-bg-3 fixed top-0 right-0 bottom-0 left-0 width-full z-[99999]
+					bg-[#0a0612] text-zinc-100 fixed top-0 right-0 bottom-0 left-0 width-full z-[99999]
 					transition-all duration-1000 ${isOnboardingComplete ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'}
 				`}
-				style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+				style={{
+					height: '100vh',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					background: 'radial-gradient(ellipse at 50% 20%, #1c0e35 0%, #0a0612 70%)',
+				}}
 			>
 				<ErrorBoundary>
 					<DarkOSOnboardingContent />
 				</ErrorBoundary>
 			</div>
 		</div>
-	)
-}
-
-const VoidIcon = () => {
-	const accessor = useAccessor()
-	const themeService = accessor.get('IThemeService')
-
-	const divRef = useRef<HTMLDivElement | null>(null)
-
-	useEffect(() => {
-		// void icon style
-		const updateTheme = () => {
-			const theme = themeService.getColorTheme().type
-			const isDark = theme === ColorScheme.DARK || theme === ColorScheme.HIGH_CONTRAST_DARK
-			if (divRef.current) {
-				divRef.current.style.maxWidth = '220px'
-				divRef.current.style.opacity = '50%'
-				divRef.current.style.filter = isDark ? '' : 'invert(1)' //brightness(.5)
-			}
-		}
-		updateTheme()
-		const d = themeService.onDidColorThemeChange(updateTheme)
-		return () => d.dispose()
-	}, [])
-
-	return <div ref={divRef} className='@@void-void-icon' />
-}
-
-const FADE_DURATION_MS = 2000
-
-const FadeIn = ({ children, className, delayMs = 0, durationMs, ...props }: { children: React.ReactNode, delayMs?: number, durationMs?: number, className?: string } & React.HTMLAttributes<HTMLDivElement>) => {
-
-	const [opacity, setOpacity] = useState(0)
-
-	const effectiveDurationMs = durationMs ?? FADE_DURATION_MS
-
-	useEffect(() => {
-
-		const timeout = setTimeout(() => {
-			setOpacity(1)
-		}, delayMs)
-
-		return () => clearTimeout(timeout)
-	}, [setOpacity, delayMs])
-
-
-	return (
-		<div className={className} style={{ opacity, transition: `opacity ${effectiveDurationMs}ms ease-in-out` }} {...props}>
-			{children}
-		</div>
-	)
-}
-
-// Onboarding
-
-// =============================================
-//  New AddProvidersPage Component and helpers
-// =============================================
-
-const tabNames = ['Free', 'Paid', 'Local'] as const;
-
-type TabName = typeof tabNames[number] | 'Cloud/Other';
-
-// Data for cloud providers tab
-const cloudProviders: ProviderName[] = ['googleVertex', 'liteLLM', 'microsoftAzure', 'awsBedrock', 'openAICompatible'];
-
-// Data structures for provider tabs
-const providerNamesOfTab: Record<TabName, ProviderName[]> = {
-	Free: ['gemini', 'openRouter'],
-	Local: localProviderNames,
-	Paid: providerNames.filter(pn => !(['gemini', 'openRouter', ...localProviderNames, ...cloudProviders] as string[]).includes(pn)) as ProviderName[],
-	'Cloud/Other': cloudProviders,
+	);
 };
 
-const descriptionOfTab: Record<TabName, string> = {
-	Free: `Providers with a 100% free tier. Add as many as you'd like!`,
-	Paid: `Connect directly with any provider (bring your own key).`,
-	Local: `Active providers should appear automatically. Add as many as you'd like! `,
-	'Cloud/Other': `Add as many as you'd like! Reach out for custom configuration requests.`,
+const DarkOSLogoIcon = () => (
+	<div className="relative flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/30 to-violet-900/40 border border-purple-500/40 shadow-[0_0_30px_rgba(157,78,221,0.35)]">
+		<svg width="38" height="38" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path
+				d="M20 20 H55 C72 20 84 32 84 50 C84 68 72 80 55 80 H20 V20 Z"
+				stroke="url(#neon-purple)"
+				strokeWidth="9"
+				strokeLinejoin="round"
+				fill="rgba(157, 78, 221, 0.15)"
+			/>
+			<path
+				d="M38 38 H52 C60 38 66 43 66 50 C66 57 60 62 52 62 H38 V38 Z"
+				fill="url(#neon-purple-inner)"
+			/>
+			<defs>
+				<linearGradient id="neon-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+					<stop offset="0%" stopColor="#c77dff" />
+					<stop offset="100%" stopColor="#7b2cbf" />
+				</linearGradient>
+				<linearGradient id="neon-purple-inner" x1="0%" y1="0%" x2="100%" y2="100%">
+					<stop offset="0%" stopColor="#e0aaff" />
+					<stop offset="100%" stopColor="#9d4edd" />
+				</linearGradient>
+			</defs>
+		</svg>
+	</div>
+);
+
+type ModelOptionInfo = {
+	id: string;
+	title: string;
+	ramRequired: string;
+	desc: string;
+	badge?: string;
 };
 
-
-const featureNameMap: { display: string, featureName: FeatureName }[] = [
-	{ display: 'Chat', featureName: 'Chat' },
-	{ display: 'Quick Edit', featureName: 'Ctrl+K' },
-	{ display: 'Autocomplete', featureName: 'Autocomplete' },
-	{ display: 'Fast Apply', featureName: 'Apply' },
-	{ display: 'Source Control', featureName: 'SCM' },
+const AVAILABLE_LOCAL_MODELS: ModelOptionInfo[] = [
+	{
+		id: 'qwen2.5-coder:1.5b',
+		title: 'Qwen 2.5 Coder (1.5B)',
+		ramRequired: '~1.2 GB RAM / VRAM',
+		desc: 'Ultrarrápido e super leve. Recomendado para computadores com placa de vídeo integrada ou até 12GB de RAM.',
+		badge: 'Mais Rápido & Leve',
+	},
+	{
+		id: 'qwen2.5-coder:3b',
+		title: 'Qwen 2.5 Coder (3B)',
+		ramRequired: '~2.2 GB RAM / VRAM',
+		desc: 'Equilíbrio excelente entre velocidade e inteligência para escrita e edição de código.',
+		badge: 'Equilibrado',
+	},
+	{
+		id: 'qwen2.5-coder:7b',
+		title: 'Qwen 2.5 Coder (7B)',
+		ramRequired: '~4.7 GB RAM / VRAM',
+		desc: 'Máxima capacidade de raciocínio e refatoração profunda. Recomendado para 16GB+ de RAM ou GPU dedicada.',
+		badge: 'Maior Inteligência',
+	},
 ];
 
-const AddProvidersPage = ({ pageIndex, setPageIndex }: { pageIndex: number, setPageIndex: (index: number) => void }) => {
-	const [currentTab, setCurrentTab] = useState<TabName>('Free');
-	const settingsState = useSettingsState();
+const DarkOSOnboardingContent = () => {
+	const accessor = useAccessor();
+	const darkosSettingsService = accessor.get('IVoidSettingsService');
+	const mainProcessService = accessor.get('IMainProcessService');
+
+	const channel = mainProcessService.getChannel('darkos-channel-ai-prep');
+
+	const [step, setStep] = useState<0 | 1 | 2>(0);
+
+	// Hardware diagnostic state
+	const [hardware, setHardware] = useState<HardwareInfo | null>(null);
+	const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus | null>(null);
+	const [selectedModel, setSelectedModel] = useState<string>('qwen2.5-coder:1.5b');
+
+	// Download/install progress state
+	const [isInstalling, setIsInstalling] = useState<boolean>(false);
+	const [isPaused, setIsPaused] = useState<boolean>(false);
+	const [progressStatus, setProgressStatus] = useState<string>('Aguardando início...');
+	const [progressPercent, setProgressPercent] = useState<number>(0);
+	const [bytesCompleted, setBytesCompleted] = useState<number | undefined>(undefined);
+	const [bytesTotal, setBytesTotal] = useState<number | undefined>(undefined);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [isReady, setIsReady] = useState<boolean>(false);
 
-	// Clear error message after 5 seconds
+	// Cloud provider selection in step 1
+	const [showCloudDetails, setShowCloudDetails] = useState<boolean>(false);
+
+	// Detect hardware on mount
 	useEffect(() => {
-		let timeoutId: NodeJS.Timeout | null = null;
+		let isMounted = true;
 
-		if (errorMessage) {
-			timeoutId = setTimeout(() => {
-				setErrorMessage(null);
-			}, 5000);
-		}
+		const init = async () => {
+			try {
+				const hw: HardwareInfo = await channel.call('detectHardware');
+				if (isMounted) {
+					setHardware(hw);
+					if (hw.recommendedModel) {
+						setSelectedModel(hw.recommendedModel);
+					}
+				}
 
-		// Cleanup function to clear the timeout if component unmounts or error changes
-		return () => {
-			if (timeoutId) {
-				clearTimeout(timeoutId);
+				const ollama: OllamaStatus = await channel.call('checkOllama');
+				if (isMounted) {
+					setOllamaStatus(ollama);
+					if (ollama.models && ollama.models.includes(hw.recommendedModel)) {
+						setIsReady(true);
+						setProgressPercent(100);
+						setProgressStatus('Modelo já baixado e disponível offline!');
+					}
+				}
+			} catch (e: any) {
+				console.error('Failed to detect hardware or Ollama status:', e);
 			}
 		};
-	}, [errorMessage]);
 
-	return (<div className="flex flex-col md:flex-row w-full h-[80vh] gap-6 max-w-[900px] mx-auto relative">
-		{/* Left Column */}
-		<div className="md:w-1/4 w-full flex flex-col gap-6 p-6 border-none border-void-border-2 h-full overflow-y-auto">
-			{/* Tab Selector */}
-			<div className="flex md:flex-col gap-2">
-				{[...tabNames, 'Cloud/Other'].map(tab => (
-					<button
-						key={tab}
-						className={`py-2 px-4 rounded-md text-left ${currentTab === tab
-							? 'bg-[#0e70c0]/80 text-white font-medium shadow-sm'
-							: 'bg-void-bg-2 hover:bg-void-bg-2/80 text-void-fg-1'
-							} transition-all duration-200`}
-						onClick={() => {
-							setCurrentTab(tab as TabName);
-							setErrorMessage(null); // Reset error message when changing tabs
-						}}
-					>
-						{tab}
-					</button>
-				))}
-			</div>
-
-			{/* Feature Checklist */}
-			<div className="flex flex-col gap-1 mt-4 text-sm opacity-80">
-				{featureNameMap.map(({ display, featureName }) => {
-					const hasModel = settingsState.modelSelectionOfFeature[featureName] !== null;
-					return (
-						<div key={featureName} className="flex items-center gap-2">
-							{hasModel ? (
-								<Check className="w-4 h-4 text-emerald-500" />
-							) : (
-								<div className="w-3 h-3 rounded-full flex items-center justify-center">
-									<div className="w-1 h-1 rounded-full bg-white/70"></div>
-								</div>
-							)}
-							<span>{display}</span>
-						</div>
-					);
-				})}
-			</div>
-		</div>
-
-		{/* Right Column */}
-		<div className="flex-1 flex flex-col items-center justify-start p-6 h-full overflow-y-auto">
-			<div className="text-5xl mb-2 text-center w-full">Add a Provider</div>
-
-			<div className="w-full max-w-xl mt-4 mb-10">
-				<div className="text-4xl font-light my-4 w-full">{currentTab}</div>
-				<div className="text-sm opacity-80 text-void-fg-3 my-4 w-full">{descriptionOfTab[currentTab]}</div>
-			</div>
-
-			{providerNamesOfTab[currentTab].map((providerName) => (
-				<div key={providerName} className="w-full max-w-xl mb-10">
-					<div className="text-xl mb-2">
-						Add {displayInfoOfProviderName(providerName).title}
-						{providerName === 'gemini' && (
-							<span
-								data-tooltip-id="darkos-tooltip-provider-info"
-								data-tooltip-content="Gemini 2.5 Pro offers 25 free messages a day, and Gemini 2.5 Flash offers 500. We recommend using models down the line as you run out of free credits."
-								data-tooltip-place="right"
-								className="ml-1 text-xs align-top text-blue-400"
-							>*</span>
-						)}
-						{providerName === 'openRouter' && (
-							<span
-								data-tooltip-id="darkos-tooltip-provider-info"
-								data-tooltip-content="OpenRouter offers 50 free messages a day, and 1000 if you deposit $10. Only applies to models labeled ':free'."
-								data-tooltip-place="right"
-								className="ml-1 text-xs align-top text-blue-400"
-							>*</span>
-						)}
-					</div>
-					<div>
-						<SettingsForProvider providerName={providerName} showProviderTitle={false} showProviderSuggestions={true} />
-
-					</div>
-					{providerName === 'ollama' && <OllamaSetupInstructions />}
-				</div>
-			))}
-
-			{(currentTab === 'Local' || currentTab === 'Cloud/Other') && (
-				<div className="w-full max-w-xl mt-8 bg-void-bg-2/50 rounded-lg p-6 border border-void-border-4">
-					<div className="flex items-center gap-2 mb-4">
-						<div className="text-xl font-medium">Models</div>
-					</div>
-
-					{currentTab === 'Local' && (
-						<div className="text-sm opacity-80 text-void-fg-3 my-4 w-full">Local models should be detected automatically. You can add custom models below.</div>
-					)}
-
-					{currentTab === 'Local' && <ModelDump filteredProviders={localProviderNames} />}
-					{currentTab === 'Cloud/Other' && <ModelDump filteredProviders={cloudProviders} />}
-				</div>
-			)}
-
-
-
-			{/* Navigation buttons in right column */}
-			<div className="flex flex-col items-end w-full mt-auto pt-8">
-				{errorMessage && (
-					<div className="text-amber-400 mb-2 text-sm opacity-80 transition-opacity duration-300">{errorMessage}</div>
-				)}
-				<div className="flex items-center gap-2">
-					<PreviousButton onClick={() => setPageIndex(pageIndex - 1)} />
-					<NextButton
-						onClick={() => {
-							const isDisabled = isFeatureNameDisabled('Chat', settingsState)
-
-							if (!isDisabled) {
-								setPageIndex(pageIndex + 1);
-								setErrorMessage(null);
-							} else {
-								// Show error message
-								setErrorMessage("Please set up at least one Chat model before moving on.");
-							}
-						}}
-					/>
-				</div>
-			</div>
-		</div>
-	</div>);
-};
-// =============================================
-// 	OnboardingPage
-// 		title:
-// 			div
-// 				"Welcome to Void"
-// 			image
-// 		content:<></>
-// 		title
-// 		content
-// 		prev/next
-
-// 	OnboardingPage
-// 		title:
-// 			div
-// 				"How would you like to use Void?"
-// 		content:
-// 			ModelQuestionContent
-// 				|
-// 					div
-// 						"I want to:"
-// 					div
-// 						"Use the smartest models"
-// 						"Keep my data fully private"
-// 						"Save money"
-// 						"I don't know"
-// 				| div
-// 					| div
-// 						"We recommend using "
-// 						"Set API"
-// 					| div
-// 						""
-// 					| div
-//
-// 		title
-// 		content
-// 		prev/next
-//
-// 	OnboardingPage
-// 		title
-// 		content
-// 		prev/next
-
-const NextButton = ({ onClick, ...props }: { onClick: () => void } & React.ButtonHTMLAttributes<HTMLButtonElement>) => {
-
-	// Create a new props object without the disabled attribute
-	const { disabled, ...buttonProps } = props;
-
-	return (
-		<button
-			onClick={disabled ? undefined : onClick}
-			onDoubleClick={onClick}
-			className={`px-6 py-2 bg-zinc-100 ${disabled
-				? 'bg-zinc-100/40 cursor-not-allowed'
-				: 'hover:bg-zinc-100'
-				} rounded text-black duration-600 transition-all
-			`}
-			{...disabled && {
-				'data-tooltip-id': 'darkos-tooltip',
-				"data-tooltip-content": 'Please enter all required fields or choose another provider', // (double-click to proceed anyway, can come back in Settings)
-				"data-tooltip-place": 'top',
-			}}
-			{...buttonProps}
-		>
-			Next
-		</button>
-	)
-}
-
-const PreviousButton = ({ onClick, ...props }: { onClick: () => void } & React.ButtonHTMLAttributes<HTMLButtonElement>) => {
-	return (
-		<button
-			onClick={onClick}
-			className="px-6 py-2 rounded text-void-fg-3 opacity-80 hover:brightness-115 duration-600 transition-all"
-			{...props}
-		>
-			Back
-		</button>
-	)
-}
-
-
-
-const OnboardingPageShell = ({ top, bottom, content, hasMaxWidth = true, className = '', }: {
-	top?: React.ReactNode,
-	bottom?: React.ReactNode,
-	content?: React.ReactNode,
-	hasMaxWidth?: boolean,
-	className?: string,
-}) => {
-	return (
-		<div className={`h-[80vh] text-lg flex flex-col gap-4 w-full mx-auto ${hasMaxWidth ? 'max-w-[600px]' : ''} ${className}`}>
-			{top && <FadeIn className='w-full mb-auto pt-16'>{top}</FadeIn>}
-			{content && <FadeIn className='w-full my-auto'>{content}</FadeIn>}
-			{bottom && <div className='w-full pb-8'>{bottom}</div>}
-		</div>
-	)
-}
-
-const OllamaDownloadOrRemoveModelButton = ({ modelName, isModelInstalled, sizeGb }: { modelName: string, isModelInstalled: boolean, sizeGb: number | false | 'not-known' }) => {
-	// for now just link to the ollama download page
-	return <a
-		href={`https://ollama.com/library/${modelName}`}
-		target="_blank"
-		rel="noopener noreferrer"
-		className="flex items-center justify-center text-void-fg-2 hover:text-void-fg-1"
-	>
-		<ExternalLink className="w-3.5 h-3.5" />
-	</a>
-
-}
-
-
-const YesNoText = ({ val }: { val: boolean | null }) => {
-
-	return <div
-		className={
-			val === true ? "text text-emerald-500"
-				: val === false ? 'text-rose-600'
-					: "text text-amber-300"
-		}
-	>
-		{
-			val === true ? "Yes"
-				: val === false ? 'No'
-					: "Yes*"
-		}
-	</div>
-
-}
-
-
-
-const abbreviateNumber = (num: number): string => {
-	if (num >= 1000000) {
-		// For millions
-		return Math.floor(num / 1000000) + 'M';
-	} else if (num >= 1000) {
-		// For thousands
-		return Math.floor(num / 1000) + 'K';
-	} else {
-		// For numbers less than 1000
-		return num.toString();
-	}
-}
-
-
-
-
-
-const PrimaryActionButton = ({ children, className, ringSize, ...props }: { children: React.ReactNode, ringSize?: undefined | 'xl' | 'screen' } & React.ButtonHTMLAttributes<HTMLButtonElement>) => {
-
-
-	return (
-		<button
-			type='button'
-			className={`
-				flex items-center justify-center
-
-				text-white dark:text-black
-				bg-black/90 dark:bg-white/90
-
-				${ringSize === 'xl' ? `
-					gap-2 px-16 py-8
-					transition-all duration-300 ease-in-out
-					`
-					: ringSize === 'screen' ? `
-					gap-2 px-16 py-8
-					transition-all duration-1000 ease-in-out
-					`: ringSize === undefined ? `
-					gap-1 px-4 py-2
-					transition-all duration-300 ease-in-out
-				`: ''}
-
-				rounded-lg
-				group
-				${className}
-			`}
-			{...props}
-		>
-			{children}
-			<ChevronRight
-				className={`
-					transition-all duration-300 ease-in-out
-
-					transform
-					group-hover:translate-x-1
-					group-active:translate-x-1
-				`}
-			/>
-		</button>
-	)
-}
-
-
-type WantToUseOption = 'smart' | 'private' | 'cheap' | 'all'
-
-const DarkOSOnboardingContent = () => {
-
-
-	const accessor = useAccessor()
-	const darkosSettingsService = accessor.get('IVoidSettingsService')
-	const voidMetricsService = accessor.get('IMetricsService')
-
-	const voidSettingsState = useSettingsState()
-
-	const [pageIndex, setPageIndex] = useState(0)
-
-
-	// page 1 state
-	const [wantToUseOption, setWantToUseOption] = useState<WantToUseOption>('smart')
-
-	// Replace the single selectedProviderName with four separate states
-	// page 2 state - each tab gets its own state
-	const [selectedIntelligentProvider, setSelectedIntelligentProvider] = useState<ProviderName>('anthropic');
-	const [selectedPrivateProvider, setSelectedPrivateProvider] = useState<ProviderName>('ollama');
-	const [selectedAffordableProvider, setSelectedAffordableProvider] = useState<ProviderName>('gemini');
-	const [selectedAllProvider, setSelectedAllProvider] = useState<ProviderName>('anthropic');
-
-	// Helper function to get the current selected provider based on active tab
-	const getSelectedProvider = (): ProviderName => {
-		switch (wantToUseOption) {
-			case 'smart': return selectedIntelligentProvider;
-			case 'private': return selectedPrivateProvider;
-			case 'cheap': return selectedAffordableProvider;
-			case 'all': return selectedAllProvider;
-		}
-	}
-
-	// Helper function to set the selected provider for the current tab
-	const setSelectedProvider = (provider: ProviderName) => {
-		switch (wantToUseOption) {
-			case 'smart': setSelectedIntelligentProvider(provider); break;
-			case 'private': setSelectedPrivateProvider(provider); break;
-			case 'cheap': setSelectedAffordableProvider(provider); break;
-			case 'all': setSelectedAllProvider(provider); break;
-		}
-	}
-
-	const providerNamesOfWantToUseOption: { [wantToUseOption in WantToUseOption]: ProviderName[] } = {
-		smart: ['anthropic', 'openAI', 'gemini', 'openRouter'],
-		private: ['ollama', 'vLLM', 'openAICompatible', 'lmStudio'],
-		cheap: ['gemini', 'deepseek', 'openRouter', 'ollama', 'vLLM'],
-		all: providerNames,
-	}
-
-
-	const selectedProviderName = getSelectedProvider();
-	const didFillInProviderSettings = selectedProviderName && voidSettingsState.settingsOfProvider[selectedProviderName]._didFillInProviderSettings
-	const isApiKeyLongEnoughIfApiKeyExists = selectedProviderName && voidSettingsState.settingsOfProvider[selectedProviderName].apiKey ? voidSettingsState.settingsOfProvider[selectedProviderName].apiKey.length > 15 : true
-	const isAtLeastOneModel = selectedProviderName && voidSettingsState.settingsOfProvider[selectedProviderName].models.length >= 1
-
-	const didFillInSelectedProviderSettings = !!(didFillInProviderSettings && isApiKeyLongEnoughIfApiKeyExists && isAtLeastOneModel)
-
-	const prevAndNextButtons = <div className="max-w-[600px] w-full mx-auto flex flex-col items-end">
-		<div className="flex items-center gap-2">
-			<PreviousButton
-				onClick={() => { setPageIndex(pageIndex - 1) }}
-			/>
-			<NextButton
-				onClick={() => { setPageIndex(pageIndex + 1) }}
-			/>
-		</div>
-	</div>
-
-
-	const lastPagePrevAndNextButtons = <div className="max-w-[600px] w-full mx-auto flex flex-col items-end">
-		<div className="flex items-center gap-2">
-			<PreviousButton
-				onClick={() => { setPageIndex(pageIndex - 1) }}
-			/>
-			<PrimaryActionButton
-				onClick={() => {
-					darkosSettingsService.setGlobalSetting('isOnboardingComplete', true);
-					voidMetricsService.capture('Completed Onboarding', { selectedProviderName, wantToUseOption })
-				}}
-				ringSize={voidSettingsState.globalSettings.isOnboardingComplete ? 'screen' : undefined}
-			>Enter the Void</PrimaryActionButton>
-		</div>
-	</div>
-
-
-	// cannot be md
-	const basicDescOfWantToUseOption: { [wantToUseOption in WantToUseOption]: string } = {
-		smart: "Models with the best performance on benchmarks.",
-		private: "Host on your computer or local network for full data privacy.",
-		cheap: "Free and affordable options.",
-		all: "",
-	}
-
-	// can be md
-	const detailedDescOfWantToUseOption: { [wantToUseOption in WantToUseOption]: string } = {
-		smart: "Most intelligent and best for agent mode.",
-		private: "Private-hosted so your data never leaves your computer or network. [Email us](mailto:founders@github.com/pedro2rafael4561-boop/DarkOS) for help setting up at your company.",
-		cheap: "Use great deals like Gemini 2.5 Pro, or self-host a model with Ollama or vLLM for free.",
-		all: "",
-	}
-
-	// Modified: initialize separate provider states on initial render instead of watching wantToUseOption changes
-	useEffect(() => {
-		if (selectedIntelligentProvider === undefined) {
-			setSelectedIntelligentProvider(providerNamesOfWantToUseOption['smart'][0]);
-		}
-		if (selectedPrivateProvider === undefined) {
-			setSelectedPrivateProvider(providerNamesOfWantToUseOption['private'][0]);
-		}
-		if (selectedAffordableProvider === undefined) {
-			setSelectedAffordableProvider(providerNamesOfWantToUseOption['cheap'][0]);
-		}
-		if (selectedAllProvider === undefined) {
-			setSelectedAllProvider(providerNamesOfWantToUseOption['all'][0]);
-		}
+		init();
+
+		// Listen to progress events
+		const disposable = channel.listen<PullProgressEvent>('onPullProgress')((event) => {
+			if (!isMounted) return;
+
+			if (event.status) setProgressStatus(event.status);
+			if (typeof event.percent === 'number') setProgressPercent(event.percent);
+			if (typeof event.completed === 'number') setBytesCompleted(event.completed);
+			if (typeof event.total === 'number') setBytesTotal(event.total);
+
+			if (event.error) {
+				setErrorMessage(event.error);
+				setIsInstalling(false);
+			}
+
+			if (event.done) {
+				setIsReady(true);
+				setIsInstalling(false);
+				setProgressPercent(100);
+				setProgressStatus('IA Local pronta para uso offline!');
+			}
+		});
+
+		return () => {
+			isMounted = false;
+			disposable.dispose();
+		};
 	}, []);
 
-	// reset the page to page 0 if the user redos onboarding
-	useEffect(() => {
-		if (!voidSettingsState.globalSettings.isOnboardingComplete) {
-			setPageIndex(0)
+	// Apply configuration to DarkOS settings once model is ready
+	const applyModelToDefaults = useCallback(async (modelName: string) => {
+		try {
+			await darkosSettingsService.setSettingOfProvider('ollama', '_didFillInProviderSettings', true);
+			darkosSettingsService.addModel('ollama', modelName);
+
+			await darkosSettingsService.setModelSelectionOfFeature('Chat', { providerName: 'ollama', modelName });
+			await darkosSettingsService.setModelSelectionOfFeature('Ctrl+K', { providerName: 'ollama', modelName });
+			await darkosSettingsService.setModelSelectionOfFeature('Autocomplete', { providerName: 'ollama', modelName });
+			await darkosSettingsService.setModelSelectionOfFeature('Apply', { providerName: 'ollama', modelName });
+			await darkosSettingsService.setModelSelectionOfFeature('SCM', { providerName: 'ollama', modelName });
+		} catch (e) {
+			console.error('Failed to configure default model:', e);
 		}
-	}, [setPageIndex, voidSettingsState.globalSettings.isOnboardingComplete])
+	}, [darkosSettingsService]);
 
+	// Handler to start preparation
+	const handleStartPreparation = async () => {
+		setErrorMessage(null);
+		setIsInstalling(true);
+		setIsPaused(false);
+		setProgressPercent(5);
+		setProgressStatus('Iniciando ambiente local...');
 
-	const contentOfIdx: { [pageIndex: number]: React.ReactNode } = {
-		0: <OnboardingPageShell
-			content={
-				<div className='flex flex-col items-center gap-8'>
-					<div className="text-5xl font-light text-center">Welcome to Void</div>
+		try {
+			// 1. Check if Ollama needs installation
+			const currentOllama: OllamaStatus = await channel.call('checkOllama');
+			if (!currentOllama.installed) {
+				setProgressStatus('Baixando e instalando motor local (silencioso)...');
+				const installRes = await channel.call('installOllama');
+				if (!installRes.success) {
+					setErrorMessage(installRes.error || 'Não foi possível instalar o motor local.');
+					setIsInstalling(false);
+					return;
+				}
+			}
 
-					{/* Slice of Void image */}
-					<div className='max-w-md w-full h-[30vh] mx-auto flex items-center justify-center'>
-						{!isLinux && <VoidIcon />}
+			// 2. Ensure Ollama service is running
+			setProgressStatus('Iniciando serviço de IA local...');
+			await channel.call('startOllama');
+
+			// 3. Pull selected model
+			setProgressStatus(`Baixando modelo ${selectedModel}...`);
+			const pullSuccess = await channel.call('pullModel', { modelName: selectedModel });
+			if (pullSuccess) {
+				await applyModelToDefaults(selectedModel);
+				setIsReady(true);
+			}
+		} catch (err: any) {
+			setErrorMessage(err?.message || 'Ocorreu um erro na preparação. Clique em Tentar Novamente.');
+		} finally {
+			setIsInstalling(false);
+		}
+	};
+
+	const handlePause = async () => {
+		setIsPaused(true);
+		setIsInstalling(false);
+		await channel.call('pausePull');
+		setProgressStatus('Download pausado.');
+	};
+
+	const handleResume = async () => {
+		setErrorMessage(null);
+		setIsPaused(false);
+		setIsInstalling(true);
+		setProgressStatus('Retomando download...');
+		const success = await channel.call('resumePull', { modelName: selectedModel });
+		if (success) {
+			await applyModelToDefaults(selectedModel);
+			setIsReady(true);
+		}
+		setIsInstalling(false);
+	};
+
+	const handleCompleteOnboarding = () => {
+		darkosSettingsService.setGlobalSetting('isOnboardingComplete', true);
+	};
+
+	const formatBytes = (bytes?: number) => {
+		if (!bytes) return '';
+		const mb = bytes / (1024 * 1024);
+		if (mb >= 1024) {
+			return `${(mb / 1024).toFixed(2)} GB`;
+		}
+		return `${Math.round(mb)} MB`;
+	};
+
+	return (
+		<div className="w-full max-w-[860px] mx-auto p-6 flex flex-col justify-between h-[90vh]">
+			{/* Top Header */}
+			<div className="flex items-center justify-between border-b border-purple-900/30 pb-4 mb-4">
+				<div className="flex items-center gap-3">
+					<DarkOSLogoIcon />
+					<div>
+						<h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-purple-100 to-purple-400 bg-clip-text text-transparent">
+							DarkOS
+						</h1>
+						<p className="text-xs text-purple-300/70">Editor de Código com Inteligência Artificial Nativa e Local</p>
 					</div>
+				</div>
 
-
-					<FadeIn
-						delayMs={1000}
+				{/* Steps Indicator */}
+				<div className="flex items-center gap-2 text-xs">
+					<div
+						className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all ${
+							step === 0
+								? 'bg-purple-900/50 border-purple-500/60 text-purple-200'
+								: 'bg-zinc-900/50 border-zinc-800 text-zinc-400'
+						}`}
 					>
-						<PrimaryActionButton
-							onClick={() => { setPageIndex(1) }}
-						>
-							Get Started
-						</PrimaryActionButton>
-					</FadeIn>
+						<span className="w-4 h-4 rounded-full bg-purple-600/60 flex items-center justify-center text-[10px] font-bold">1</span>
+						<span>IA Local</span>
+					</div>
 
-				</div>
-			}
-		/>,
+					<ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
 
-		1: <OnboardingPageShell hasMaxWidth={false}
-			content={
-				<AddProvidersPage pageIndex={pageIndex} setPageIndex={setPageIndex} />
-			}
-		/>,
-		2: <OnboardingPageShell
+					<div
+						className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all ${
+							step === 1
+								? 'bg-purple-900/50 border-purple-500/60 text-purple-200'
+								: 'bg-zinc-900/50 border-zinc-800 text-zinc-400'
+						}`}
+					>
+						<span className="w-4 h-4 rounded-full bg-purple-600/60 flex items-center justify-center text-[10px] font-bold">2</span>
+						<span>Nuvem (Opcional)</span>
+					</div>
 
-			content={
-				<div>
-					<div className="text-5xl font-light text-center">Settings and Themes</div>
+					<ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
 
-					<div className="mt-8 text-center flex flex-col items-center gap-4 w-full max-w-md mx-auto">
-						<h4 className="text-void-fg-3 mb-4">Transfer your settings from an existing editor?</h4>
-						<OneClickSwitchButton className='w-full px-4 py-2' fromEditor="VS Code" />
-						<OneClickSwitchButton className='w-full px-4 py-2' fromEditor="Cursor" />
-						<OneClickSwitchButton className='w-full px-4 py-2' fromEditor="Windsurf" />
+					<div
+						className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all ${
+							step === 2
+								? 'bg-purple-900/50 border-purple-500/60 text-purple-200'
+								: 'bg-zinc-900/50 border-zinc-800 text-zinc-400'
+						}`}
+					>
+						<span className="w-4 h-4 rounded-full bg-purple-600/60 flex items-center justify-center text-[10px] font-bold">3</span>
+						<span>Pronto</span>
 					</div>
 				</div>
-			}
-			bottom={lastPagePrevAndNextButtons}
-		/>,
-	}
+			</div>
 
+			{/* Main Content Area */}
+			<div className="flex-1 overflow-y-auto pr-2 custom-scrollbar flex flex-col justify-center">
+				{step === 0 && (
+					<div className="space-y-6">
+						{/* Title */}
+						<div className="text-center space-y-1">
+							<h2 className="text-3xl font-extralight tracking-tight text-white">Preparando sua IA...</h2>
+							<p className="text-sm text-zinc-400">
+								Detectamos o seu hardware para configurar a melhor IA de código com execução 100% local e sem custos.
+							</p>
+						</div>
 
-	return <div key={pageIndex} className="w-full h-[80vh] text-left mx-auto flex flex-col items-center justify-center">
-		<ErrorBoundary>
-			{contentOfIdx[pageIndex]}
-		</ErrorBoundary>
-	</div>
+						{/* Hardware Diagnostic Card */}
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-purple-950/20 border border-purple-800/30 rounded-xl p-4 backdrop-blur-sm">
+							<div className="flex items-center gap-3">
+								<div className="p-2.5 rounded-lg bg-purple-900/30 border border-purple-700/40 text-purple-300">
+									<Cpu className="w-5 h-5" />
+								</div>
+								<div>
+									<div className="text-xs text-purple-300/80 uppercase font-medium">Placa de Vídeo / Gráficos</div>
+									<div className="text-sm font-medium text-white truncate max-w-[280px]">
+										{hardware ? hardware.gpuName : 'Detectando aceleração...'}
+									</div>
+								</div>
+							</div>
 
-}
+							<div className="flex items-center gap-3">
+								<div className="p-2.5 rounded-lg bg-purple-900/30 border border-purple-700/40 text-purple-300">
+									<HardDrive className="w-5 h-5" />
+								</div>
+								<div>
+									<div className="text-xs text-purple-300/80 uppercase font-medium">Memória RAM</div>
+									<div className="text-sm font-medium text-white">
+										{hardware ? `${hardware.totalRamGB} GB total (${hardware.freeRamGB} GB livres)` : 'Calculando memória...'}
+									</div>
+								</div>
+							</div>
+						</div>
+
+						{/* Model Selection */}
+						<div className="space-y-2">
+							<label className="text-xs font-semibold text-purple-300 uppercase tracking-wider block">
+								Escolha o tamanho do modelo para o seu computador:
+							</label>
+
+							<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+								{AVAILABLE_LOCAL_MODELS.map((model) => {
+									const isSelected = selectedModel === model.id;
+									const isRecommended = hardware?.recommendedModel === model.id;
+
+									return (
+										<div
+											key={model.id}
+											onClick={() => !isInstalling && setSelectedModel(model.id)}
+											className={`relative p-3.5 rounded-xl border cursor-pointer transition-all ${
+												isSelected
+													? 'bg-purple-950/50 border-purple-500 shadow-[0_0_15px_rgba(157,78,221,0.25)] ring-1 ring-purple-400'
+													: 'bg-zinc-900/40 border-zinc-800 hover:border-purple-800/50 hover:bg-zinc-900/70'
+											} ${isInstalling ? 'opacity-60 cursor-not-allowed' : ''}`}
+										>
+											{isRecommended && (
+												<div className="absolute -top-2.5 right-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-[10px] font-bold text-white px-2 py-0.5 rounded-full border border-purple-300/30 shadow-sm flex items-center gap-1">
+													<Sparkles className="w-2.5 h-2.5" /> Recomendado
+												</div>
+											)}
+
+											<div className="font-semibold text-sm text-white mb-1">{model.title}</div>
+											<div className="text-[11px] text-purple-300/90 font-mono mb-2">{model.ramRequired}</div>
+											<p className="text-xs text-zinc-400 leading-relaxed">{model.desc}</p>
+										</div>
+									);
+								})}
+							</div>
+						</div>
+
+						{/* Progress Bar & Status */}
+						<div className="bg-zinc-900/60 border border-purple-900/30 rounded-xl p-4 space-y-3">
+							<div className="flex items-center justify-between text-sm">
+								<div className="flex items-center gap-2">
+									{isInstalling && <Loader2 className="w-4 h-4 animate-spin text-purple-400" />}
+									{isReady && <Check className="w-4 h-4 text-emerald-400" />}
+									<span className={`font-medium ${isReady ? 'text-emerald-400' : 'text-zinc-200'}`}>
+										{progressStatus}
+									</span>
+								</div>
+								<div className="text-xs text-purple-300 font-mono">
+									{bytesCompleted && bytesTotal ? `${formatBytes(bytesCompleted)} / ${formatBytes(bytesTotal)} ` : ''}
+									({progressPercent}%)
+								</div>
+							</div>
+
+							{/* Progress Bar Track */}
+							<div className="w-full bg-zinc-950 rounded-full h-3 overflow-hidden border border-purple-950 p-[1px]">
+								<div
+									className="h-full rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-400 transition-all duration-300 relative shadow-[0_0_12px_rgba(157,78,221,0.6)]"
+									style={{ width: `${progressPercent}%` }}
+								>
+									{isInstalling && (
+										<div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
+									)}
+								</div>
+							</div>
+
+							{/* Error message banner */}
+							{errorMessage && (
+								<div className="flex items-center gap-2 text-rose-300 text-xs bg-rose-950/40 border border-rose-800/40 p-2.5 rounded-lg">
+									<AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+									<span>{errorMessage}</span>
+								</div>
+							)}
+
+							{/* Action Buttons */}
+							<div className="flex items-center justify-between pt-1">
+								<div className="flex items-center gap-2">
+									{!isInstalling && !isReady && (
+										<button
+											onClick={handleStartPreparation}
+											className="px-5 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-medium text-sm flex items-center gap-2 shadow-[0_0_20px_rgba(157,78,221,0.35)] transition-all cursor-pointer"
+										>
+											<Play className="w-4 h-4 fill-white" /> Iniciar Preparação da IA Local
+										</button>
+									)}
+
+									{isInstalling && (
+										<button
+											onClick={handlePause}
+											className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer"
+										>
+											<Pause className="w-3.5 h-3.5" /> Pausar
+										</button>
+									)}
+
+									{isPaused && (
+										<button
+											onClick={handleResume}
+											className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 text-white text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer"
+										>
+											<Play className="w-3.5 h-3.5 fill-white" /> Retomar Download
+										</button>
+									)}
+
+									{errorMessage && (
+										<button
+											onClick={handleStartPreparation}
+											className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 text-white text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer"
+										>
+											<RotateCcw className="w-3.5 h-3.5" /> Tentar Novamente
+										</button>
+									)}
+								</div>
+
+								{/* Privacy Guarantee Pill */}
+								<div className="flex items-center gap-1.5 text-[11px] text-purple-300/80 bg-purple-950/30 px-3 py-1 rounded-full border border-purple-800/20">
+									<Lock className="w-3 h-3 text-purple-400" />
+									<span>100% Offline e Privado</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				)}
+
+				{step === 1 && (
+					<div className="space-y-6 max-w-xl mx-auto">
+						<div className="text-center space-y-1">
+							<h2 className="text-2xl font-light text-white">Conectar IA em Nuvem (Opcional)</h2>
+							<p className="text-sm text-zinc-400">
+								Sua IA local já está ativa. Conectar um serviço externo é inteiramente facultativo.
+							</p>
+						</div>
+
+						{/* Privacy Alert Box */}
+						<div className="bg-amber-950/20 border border-amber-600/40 rounded-xl p-4.5 space-y-2 text-left">
+							<div className="flex items-center gap-2 text-amber-400 font-medium text-sm">
+								<AlertTriangle className="w-4 h-4 shrink-0" />
+								<span>Aviso de Privacidade & Saída de Dados</span>
+							</div>
+							<p className="text-xs text-amber-200/80 leading-relaxed">
+								Ao conectar provedores comerciais em nuvem (como OpenAI, Anthropic, Gemini ou Groq), trechos de
+								código-fonte, arquivos e mensagens serão transmitidos pela internet para servidores de terceiros.
+							</p>
+							<p className="text-xs text-amber-300 font-medium pt-1">
+								Se você trabalha com projetos confidenciais ou deseja segurança total sem enviar nada para fora, recomendamos continuar utilizando exclusivamente a IA local do DarkOS.
+							</p>
+						</div>
+
+						<div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 text-center space-y-3">
+							<div className="text-sm font-medium text-zinc-300">Deseja adicionar uma chave de API de nuvem agora?</div>
+							<div className="flex items-center justify-center gap-3">
+								<button
+									onClick={() => setShowCloudDetails(!showCloudDetails)}
+									className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300 transition-all cursor-pointer"
+								>
+									{showCloudDetails ? 'Ocultar Provedores em Nuvem' : 'Configurar Chave de Nuvem (Opcional)'}
+								</button>
+							</div>
+
+							{showCloudDetails && (
+								<div className="mt-4 pt-4 border-t border-zinc-800 text-left space-y-4">
+									<div className="text-xs text-zinc-400">
+										Insira a chave apenas se desejar usar modelos em nuvem. Caso contrário, mantenha em branco.
+									</div>
+									<div className="space-y-3">
+										<SettingsForProvider providerName="gemini" showProviderTitle={true} showProviderSuggestions={true} />
+										<SettingsForProvider providerName="openRouter" showProviderTitle={true} showProviderSuggestions={true} />
+										<SettingsForProvider providerName="openAI" showProviderTitle={true} showProviderSuggestions={true} />
+										<SettingsForProvider providerName="anthropic" showProviderTitle={true} showProviderSuggestions={true} />
+									</div>
+								</div>
+							)}
+						</div>
+					</div>
+				)}
+
+				{step === 2 && (
+					<div className="space-y-6 max-w-lg mx-auto text-center">
+						<div className="inline-flex p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.2)]">
+							<ShieldCheck className="w-10 h-10" />
+						</div>
+
+						<div className="space-y-2">
+							<h2 className="text-3xl font-light text-white">Tudo Pronto para Programar!</h2>
+							<p className="text-sm text-zinc-400">
+								O DarkOS está configurado com motor de inteligência artificial local e pronto para uso offline.
+							</p>
+						</div>
+
+						{/* Summary Card */}
+						<div className="bg-purple-950/30 border border-purple-800/40 rounded-xl p-4 text-left space-y-2.5 text-xs text-zinc-300">
+							<div className="flex items-center justify-between pb-1.5 border-b border-purple-900/30">
+								<span className="text-zinc-400">Motor de Inteligência Artificial:</span>
+								<span className="font-semibold text-purple-300">Ollama (100% Local)</span>
+							</div>
+
+							<div className="flex items-center justify-between pb-1.5 border-b border-purple-900/30">
+								<span className="text-zinc-400">Modelo Padrão Ativo:</span>
+								<span className="font-mono font-medium text-purple-200">{selectedModel}</span>
+							</div>
+
+							<div className="flex items-center justify-between pb-1.5 border-b border-purple-900/30">
+								<span className="text-zinc-400">Recursos Integrados:</span>
+								<span className="text-zinc-200">Chat, Autocompletar, Ctrl+K e Agente</span>
+							</div>
+
+							<div className="flex items-center justify-between">
+								<span className="text-zinc-400">Modo de Operação:</span>
+								<span className="text-emerald-400 font-medium">✓ Totalmente Offline e Gratuito</span>
+							</div>
+						</div>
+					</div>
+				)}
+			</div>
+
+			{/* Bottom Navigation */}
+			<div className="flex items-center justify-between border-t border-purple-900/30 pt-4 mt-2">
+				<div>
+					{step > 0 && (
+						<button
+							onClick={() => setStep((s) => (s - 1) as any)}
+							className="px-4 py-2 text-xs font-medium text-zinc-400 hover:text-white transition-all cursor-pointer"
+						>
+							Voltar
+						</button>
+					)}
+				</div>
+
+				<div className="flex items-center gap-3">
+					{step === 0 && (
+						<button
+							onClick={() => setStep(1)}
+							disabled={!isReady && !ollamaStatus?.installed}
+							className={`px-5 py-2.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
+								isReady || ollamaStatus?.installed
+									? 'bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_15px_rgba(157,78,221,0.4)] cursor-pointer'
+									: 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+							}`}
+						>
+							Continuar <ArrowRight className="w-3.5 h-3.5" />
+						</button>
+					)}
+
+					{step === 1 && (
+						<button
+							onClick={() => setStep(2)}
+							className="px-5 py-2.5 rounded-lg text-xs font-medium bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_15px_rgba(157,78,221,0.4)] flex items-center gap-1.5 cursor-pointer transition-all"
+						>
+							Continuar <ArrowRight className="w-3.5 h-3.5" />
+						</button>
+					)}
+
+					{step === 2 && (
+						<button
+							onClick={handleCompleteOnboarding}
+							className="px-7 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-purple-600 via-fuchsia-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white shadow-[0_0_30px_rgba(157,78,221,0.5)] flex items-center gap-2 cursor-pointer transition-all scale-100 hover:scale-[1.02] active:scale-95"
+						>
+							<Sparkles className="w-4 h-4 fill-white" /> Entrar no DarkOS
+						</button>
+					)}
+				</div>
+			</div>
+		</div>
+	);
+};

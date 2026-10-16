@@ -133,6 +133,7 @@ import { LLMMessageChannel } from '../../workbench/contrib/darkos/electron-main/
 import { VoidSCMService } from '../../workbench/contrib/darkos/electron-main/darkosSCMMainService.js';
 import { IVoidSCMService } from '../../workbench/contrib/darkos/common/darkosSCMTypes.js';
 import { MCPChannel } from '../../workbench/contrib/darkos/electron-main/mcpChannel.js';
+import { DarkOSAiPrepChannel } from '../../workbench/contrib/darkos/electron-main/darkosAiPrepChannel.js';
 /**
  * The main VS Code application. There will only ever be one instance,
  * even if the user starts many instances (e.g. from the command line).
@@ -1253,6 +1254,10 @@ export class CodeApplication extends Disposable {
 		// Void added this
 		const mcpChannel = new MCPChannel();
 		mainProcessElectronServer.registerChannel('darkos-channel-mcp', mcpChannel);
+
+		// DarkOS AI Prep Channel (Hardware detection & Ollama setup)
+		const aiPrepChannel = new DarkOSAiPrepChannel();
+		mainProcessElectronServer.registerChannel('darkos-channel-ai-prep', aiPrepChannel);
 
 		// Extension Host Debug Broadcasting
 		const electronExtensionHostDebugBroadcastChannel = new ElectronExtensionHostDebugBroadcastChannel(accessor.get(IWindowsMainService));

@@ -880,7 +880,7 @@ export const ToolApprovalTypeSwitch = ({ approvalType, size, desc }: { approvalT
 
 
 
-export const OneClickSwitchButton = ({ fromEditor = 'VS Code', className = '' }: { fromEditor?: TransferEditorType, className?: string }) => {
+export const OneClickSwitchButton = ({ fromEditor = 'VS Code', className = '', customLabel }: { fromEditor?: TransferEditorType, className?: string, customLabel?: string }) => {
 	const accessor = useAccessor()
 	const extensionTransferService = accessor.get('IExtensionTransferService')
 
@@ -907,10 +907,10 @@ export const OneClickSwitchButton = ({ fromEditor = 'VS Code', className = '' }:
 	}
 
 	return <>
-		<VoidButtonBgDarken className={`max-w-48 p-4 ${className}`} disabled={transferState.type !== 'done'} onClick={onClick}>
-			{transferState.type === 'done' ? `Transfer from ${fromEditor}`
-				: transferState.type === 'loading' ? <span className='text-nowrap flex flex-nowrap'>Transferring<IconLoading /></span>
-					: transferState.type === 'justfinished' ? <AnimatedCheckmarkButton text='Settings Transferred' className='bg-none' />
+		<VoidButtonBgDarken className={`max-w-64 p-4 ${className}`} disabled={transferState.type !== 'done'} onClick={onClick}>
+			{transferState.type === 'done' ? (customLabel || 'Importar Configurações')
+				: transferState.type === 'loading' ? <span className='text-nowrap flex flex-nowrap'>Importando...<IconLoading /></span>
+					: transferState.type === 'justfinished' ? <AnimatedCheckmarkButton text='Configurações Importadas' className='bg-none' />
 						: null
 			}
 		</VoidButtonBgDarken>
@@ -1395,21 +1395,19 @@ export const Settings = () => {
 								{/* One-Click Switch section */}
 								<div>
 									<ErrorBoundary>
-										<h2 className='text-3xl mb-2'>One-Click Switch</h2>
-										<h4 className='text-void-fg-3 mb-4'>{`Transfer your editor settings into Void.`}</h4>
+										<h2 className='text-3xl mb-2'>Configurações e Atalhos</h2>
+										<h4 className='text-void-fg-3 mb-4'>Importe extensões e preferências do ambiente local para o DarkOS.</h4>
 
 										<div className='flex flex-col gap-2'>
-											<OneClickSwitchButton className='w-48' fromEditor="VS Code" />
-											<OneClickSwitchButton className='w-48' fromEditor="Cursor" />
-											<OneClickSwitchButton className='w-48' fromEditor="Windsurf" />
+											<OneClickSwitchButton className='w-64' fromEditor="VS Code" customLabel="Importar Extensões e Atalhos" />
 										</div>
 									</ErrorBoundary>
 								</div>
 
 								{/* Import/Export section */}
 								<div>
-									<h2 className='text-3xl mb-2'>Import/Export</h2>
-									<h4 className='text-void-fg-3 mb-4'>{`Transfer Void's settings and chats in and out of Void.`}</h4>
+									<h2 className='text-3xl mb-2'>Importar / Exportar</h2>
+									<h4 className='text-void-fg-3 mb-4'>Transfira preferências e conversas de/para o DarkOS.</h4>
 									<div className='flex flex-col gap-8'>
 										{/* Settings Subcategory */}
 										<div className='flex flex-col gap-2 max-w-48 w-full'>

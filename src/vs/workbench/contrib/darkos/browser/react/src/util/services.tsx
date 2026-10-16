@@ -22,6 +22,7 @@ import { ILLMMessageService } from '../../../../common/sendLLMMessageService.js'
 import { IRefreshModelService } from '../../../../../../../workbench/contrib/darkos/common/refreshModelService.js';
 import { IVoidSettingsService } from '../../../../../../../workbench/contrib/darkos/common/darkosSettingsService.js';
 import { IExtensionTransferService } from '../../../../../../../workbench/contrib/darkos/browser/extensionTransferService.js'
+import { IMainProcessService } from '../../../../../../../platform/ipc/common/mainProcessService.js'
 
 import { IInstantiationService } from '../../../../../../../platform/instantiation/common/instantiation.js'
 import { ICodeEditorService } from '../../../../../../../editor/browser/services/codeEditorService.js'
@@ -229,6 +230,7 @@ const getReactAccessor = (accessor: ServicesAccessor) => {
 		IMCPService: accessor.get(IMCPService),
 
 		IStorageService: accessor.get(IStorageService),
+		IMainProcessService: accessor.get(IMainProcessService),
 
 	} as const
 	return reactAccessor
