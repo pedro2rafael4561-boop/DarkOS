@@ -369,17 +369,17 @@ export type FeatureName = keyof ModelSelectionOfFeature
 export const displayInfoOfFeatureName = (featureName: FeatureName) => {
 	// editor:
 	if (featureName === 'Autocomplete')
-		return 'Autocomplete'
+		return 'Autocompletar Código'
 	else if (featureName === 'Ctrl+K')
-		return 'Quick Edit'
+		return 'Edição Rápida (Ctrl+K)'
 	// sidebar:
 	else if (featureName === 'Chat')
-		return 'Chat'
+		return 'Chat com IA'
 	else if (featureName === 'Apply')
-		return 'Apply'
+		return 'Aplicação Rápida'
 	// source control:
 	else if (featureName === 'SCM')
-		return 'Commit Message Generator'
+		return 'Gerador de Mensagens Git'
 	else
 		throw new Error(`Feature Name ${featureName} not allowed`)
 }

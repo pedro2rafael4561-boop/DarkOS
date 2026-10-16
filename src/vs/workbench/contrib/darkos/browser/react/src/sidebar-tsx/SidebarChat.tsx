@@ -1153,7 +1153,7 @@ const UserMessageComponent = ({ chatMessage, messageIdx, isCheckpointGhost, curr
 				enableAtToMention
 				ref={setTextAreaRef}
 				className='min-h-[81px] max-h-[500px] px-0.5'
-				placeholder="Edit your message..."
+				placeholder="Editar sua mensagem..."
 				onChangeText={(text) => setIsDisabled(!text)}
 				onFocus={() => {
 					setIsFocused(true)
@@ -3078,7 +3078,7 @@ export const SidebarChat = () => {
 		<VoidInputBox2
 			enableAtToMention
 			className={`min-h-[81px] px-0.5 py-0.5`}
-			placeholder={`@ to mention, ${keybindingString ? `${keybindingString} to add a selection. ` : ''}Enter instructions...`}
+			placeholder={`@ para mencionar arquivos, ${keybindingString ? `${keybindingString} para adicionar seleção. ` : ''}Digite suas instruções...`}
 			onChangeText={onChangeText}
 			onKeyDown={onKeyDown}
 			onFocus={() => { chatThreadsService.setCurrentlyFocusedMessageIdx(undefined) }}
@@ -3095,9 +3095,9 @@ export const SidebarChat = () => {
 
 	const initiallySuggestedPromptsHTML = <div className='flex flex-col gap-2 w-full text-nowrap text-void-fg-3 select-none'>
 		{[
-			'Summarize my codebase',
-			'How do types work in Rust?',
-			'Create a .darkosrules file for me'
+			'Resuma minha base de código',
+			'Como funciona a estrutura deste projeto?',
+			'Crie regras .darkosrules para este projeto'
 		].map((text, index) => (
 			<div
 				key={index}
@@ -3136,12 +3136,12 @@ export const SidebarChat = () => {
 
 		{Object.keys(chatThreadsState.allThreads).length > 1 ? // show if there are threads
 			<ErrorBoundary>
-				<div className='pt-8 mb-2 text-void-fg-3 text-root select-none pointer-events-none'>Previous Threads</div>
+				<div className='pt-8 mb-2 text-void-fg-3 text-root select-none pointer-events-none'>Conversas Anteriores</div>
 				<PastThreadsList />
 			</ErrorBoundary>
 			:
 			<ErrorBoundary>
-				<div className='pt-8 mb-2 text-void-fg-3 text-root select-none pointer-events-none'>Suggestions</div>
+				<div className='pt-8 mb-2 text-void-fg-3 text-root select-none pointer-events-none'>Sugestões Rápidas</div>
 				{initiallySuggestedPromptsHTML}
 			</ErrorBoundary>
 		}

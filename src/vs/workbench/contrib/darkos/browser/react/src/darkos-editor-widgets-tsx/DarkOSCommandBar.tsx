@@ -230,7 +230,7 @@ export const DarkOSCommandBar = ({ uri, editor }: DarkOSCommandBarProps) => {
 						<div className="flex items-center [&>*]:border-r [&>*]:border-void-border-2 [&>*:last-child]:border-r-0">
 							<AcceptAllButtonWrapper
 								// text={`Accept All${acceptAllKeybindLabel ? ` ${acceptAllKeybindLabel}` : ''}`}
-								text={`Accept All`}
+								text={`Aceitar Tudo`}
 								data-tooltip-id='darkos-tooltip'
 								data-tooltip-content={acceptAllKeybindLabel}
 								data-tooltip-delay-show={500}
@@ -238,7 +238,7 @@ export const DarkOSCommandBar = ({ uri, editor }: DarkOSCommandBarProps) => {
 								/>
 							<RejectAllButtonWrapper
 								// text={`Reject All${rejectAllKeybindLabel ? ` ${rejectAllKeybindLabel}` : ''}`}
-								text={`Reject All`}
+								text={`Rejeitar Tudo`}
 								data-tooltip-id='darkos-tooltip'
 								data-tooltip-content={rejectAllKeybindLabel}
 								data-tooltip-delay-show={500}
@@ -271,10 +271,10 @@ export const DarkOSCommandBar = ({ uri, editor }: DarkOSCommandBarProps) => {
 					</button>
 					<span className={`text-xs whitespace-nowrap px-1 ${!isADiffInThisFile ? 'opacity-70' : ''}`}>
 						{isADiffInThisFile
-							? `Diff ${(currDiffIdx ?? 0) + 1} of ${sortedDiffIds.length}`
+							? `Alteração ${(currDiffIdx ?? 0) + 1} de ${sortedDiffIds.length}`
 							: streamState === 'streaming'
-								? 'No changes yet'
-								: 'No changes'
+								? 'Sem alterações ainda'
+								: 'Sem alterações'
 						}
 
 					</span>
@@ -318,8 +318,8 @@ export const DarkOSCommandBar = ({ uri, editor }: DarkOSCommandBarProps) => {
 					</button>
 					<span className="text-xs whitespace-nowrap px-1 mx-0.5">
 						{currFileIdx !== null
-							? `File ${currFileIdx + 1} of ${sortedCommandBarURIs.length}`
-							: `${sortedCommandBarURIs.length} file${sortedCommandBarURIs.length === 1 ? '' : 's'}`
+							? `Arquivo ${currFileIdx + 1} de ${sortedCommandBarURIs.length}`
+							: `${sortedCommandBarURIs.length} arquivo${sortedCommandBarURIs.length === 1 ? '' : 's'}`
 						}
 					</span>
 					<button
@@ -345,16 +345,14 @@ export const DarkOSCommandBar = ({ uri, editor }: DarkOSCommandBarProps) => {
 				{showAcceptRejectAll && (
 					<div className='flex self-stretch gap-0 !px-0 !py-0'>
 						<AcceptAllButtonWrapper
-							// text={`Accept File${acceptFileKeybindLabel ? ` ${acceptFileKeybindLabel}` : ''}`}
-							text={`Accept File`}
+							text={`Aceitar Arquivo`}
 							data-tooltip-id='darkos-tooltip'
 							data-tooltip-content={acceptFileKeybindLabel}
 							data-tooltip-delay-show={500}
 							onClick={onAcceptFile}
 						/>
 						<RejectAllButtonWrapper
-							// text={`Reject File${rejectFileKeybindLabel ? ` ${rejectFileKeybindLabel}` : ''}`}
-							text={`Reject File`}
+							text={`Rejeitar Arquivo`}
 							data-tooltip-id='darkos-tooltip'
 							data-tooltip-content={rejectFileKeybindLabel}
 							data-tooltip-delay-show={500}
