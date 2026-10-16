@@ -32,6 +32,8 @@
 	"reportIssueUrl": "https://github.com/pedro2rafael4561-boop/DarkOS/issues/new",
 	"nodejsRepository": "https://nodejs.org",
 	"urlProtocol": "darkos",
+	"updateUrl": "https://raw.githubusercontent.com/pedro2rafael4561-boop/DarkOS-versions/refs/heads/main",
+	"downloadUrl": "https://github.com/pedro2rafael4561-boop/DarkOS-binaries/releases",
 	"extensionsGallery": {
 		"serviceUrl": "https://marketplace.visualstudio.com/_apis/public/gallery",
 		"itemUrl": "https://marketplace.visualstudio.com/items"

@@ -79,7 +79,7 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 
 		if (this._updateService.state.type === StateType.Ready) {
 			// Update is ready
-			return { message: 'Restart Void to update!', action: 'restart' } as const
+			return { message: 'Reinicie o DarkOS para atualizar!', action: 'restart' } as const
 		}
 
 		if (this._updateService.state.type === StateType.Disabled) {
@@ -95,7 +95,7 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 
 	private async _manualCheckGHTagIfDisabled(explicit: boolean): Promise<VoidCheckUpdateRespose> {
 		try {
-			const response = await fetch('https://api.github.com/repos/pedro2rafael4561-boop/DarkOS/releases/latest');
+			const response = await fetch('https://api.github.com/repos/pedro2rafael4561-boop/DarkOS-binaries/releases/latest');
 
 			const data = await response.json();
 			const version = data.tag_name;
@@ -112,22 +112,22 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 			if (explicit) {
 				if (response.ok) {
 					if (!isUpToDate) {
-						message = 'A new version of Void is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
+						message = 'Uma nova versão do DarkOS está disponível! Por favor, atualize o aplicativo.'
 						action = 'reinstall'
 					}
 					else {
-						message = 'Void is up-to-date!'
+						message = 'O DarkOS já está na versão mais recente!'
 					}
 				}
 				else {
-					message = `An error occurred when fetching the latest GitHub release tag. Please try again in ~5 minutes, or reinstall.`
+					message = `Ocorreu um erro ao buscar a versão mais recente do DarkOS no GitHub. Tente novamente em alguns minutos.`
 					action = 'reinstall'
 				}
 			}
 			// not explicit
 			else {
 				if (response.ok && !isUpToDate) {
-					message = 'A new version of Void is available! Please reinstall (auto-updates are disabled on this OS) - it only takes a second!'
+					message = 'Uma nova versão do DarkOS está disponível! Por favor, atualize o aplicativo.'
 					action = 'reinstall'
 				}
 				else {
@@ -139,7 +139,7 @@ export class VoidMainUpdateService extends Disposable implements IVoidUpdateServ
 		catch (e) {
 			if (explicit) {
 				return {
-					message: `An error occurred when fetching the latest GitHub release tag: ${e}. Please try again in ~5 minutes.`,
+					message: `Ocorreu um erro ao buscar a versão mais recente do DarkOS no GitHub: ${e}. Tente novamente em alguns instantes.`,
 					action: 'reinstall',
 				}
 			}

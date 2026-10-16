@@ -21,7 +21,7 @@ import { IAction } from '../../../../base/common/actions.js';
 
 
 const notifyUpdate = (res: VoidCheckUpdateRespose & { message: string }, notifService: INotificationService, updateService: IUpdateService): INotificationHandle => {
-	const message = res?.message || 'This is a very old version of Void, please download the latest version! [Void Editor](https://github.com/pedro2rafael4561-boop/DarkOS/download-beta)!'
+	const message = res?.message || 'Uma atualização do DarkOS está pronta para ser baixada ou aplicada!'
 
 	let actions: INotificationActions | undefined
 
@@ -30,22 +30,22 @@ const notifyUpdate = (res: VoidCheckUpdateRespose & { message: string }, notifSe
 
 		if (res.action === 'reinstall') {
 			primary.push({
-				label: `Reinstall`,
-				id: 'void.updater.reinstall',
+				label: `Baixar Atualização`,
+				id: 'darkos.updater.reinstall',
 				enabled: true,
 				tooltip: '',
 				class: undefined,
 				run: () => {
 					const { window } = dom.getActiveWindow()
-					window.open('https://github.com/pedro2rafael4561-boop/DarkOS/download-beta')
+					window.open('https://github.com/pedro2rafael4561-boop/DarkOS-binaries/releases')
 				}
 			})
 		}
 
 		if (res.action === 'download') {
 			primary.push({
-				label: `Download`,
-				id: 'void.updater.download',
+				label: `Baixar`,
+				id: 'darkos.updater.download',
 				enabled: true,
 				tooltip: '',
 				class: undefined,
@@ -58,8 +58,8 @@ const notifyUpdate = (res: VoidCheckUpdateRespose & { message: string }, notifSe
 
 		if (res.action === 'apply') {
 			primary.push({
-				label: `Apply`,
-				id: 'void.updater.apply',
+				label: `Aplicar`,
+				id: 'darkos.updater.apply',
 				enabled: true,
 				tooltip: '',
 				class: undefined,
@@ -71,8 +71,8 @@ const notifyUpdate = (res: VoidCheckUpdateRespose & { message: string }, notifSe
 
 		if (res.action === 'restart') {
 			primary.push({
-				label: `Restart`,
-				id: 'void.updater.restart',
+				label: `Reiniciar`,
+				id: 'darkos.updater.restart',
 				enabled: true,
 				tooltip: '',
 				class: undefined,
@@ -83,23 +83,23 @@ const notifyUpdate = (res: VoidCheckUpdateRespose & { message: string }, notifSe
 		}
 
 		primary.push({
-			id: 'void.updater.site',
+			id: 'darkos.updater.site',
 			enabled: true,
-			label: `Void Site`,
+			label: `Página do DarkOS`,
 			tooltip: '',
 			class: undefined,
 			run: () => {
 				const { window } = dom.getActiveWindow()
-				window.open('https://github.com/pedro2rafael4561-boop/DarkOS/')
+				window.open('https://github.com/pedro2rafael4561-boop/DarkOS')
 			}
 		})
 
 		actions = {
 			primary: primary,
 			secondary: [{
-				id: 'void.updater.close',
+				id: 'darkos.updater.close',
 				enabled: true,
-				label: `Keep current version`,
+				label: `Manter versão atual`,
 				tooltip: '',
 				class: undefined,
 				run: () => {
@@ -121,13 +121,9 @@ const notifyUpdate = (res: VoidCheckUpdateRespose & { message: string }, notifSe
 	})
 
 	return notifController
-	// const d = notifController.onDidClose(() => {
-	// 	notifyYesUpdate(notifService, res)
-	// 	d.dispose()
-	// })
 }
 const notifyErrChecking = (notifService: INotificationService): INotificationHandle => {
-	const message = `Void Error: There was an error checking for updates. If this persists, please get in touch or reinstall Void [here](https://github.com/pedro2rafael4561-boop/DarkOS/download-beta)!`
+	const message = `DarkOS: Ocorreu um erro ao verificar novas atualizações. Tente novamente mais tarde ou acesse as versões [aqui](https://github.com/pedro2rafael4561-boop/DarkOS-binaries/releases).`
 	const notifController = notifService.notify({
 		severity: Severity.Info,
 		message: message,
@@ -147,21 +143,21 @@ const performVoidCheck = async (
 
 	const metricsTag = explicit ? 'Manual' : 'Auto'
 
-	metricsService.capture(`Void Update ${metricsTag}: Checking...`, {})
+	metricsService.capture(`DarkOS Update ${metricsTag}: Checking...`, {})
 	const res = await darkosUpdateService.check(explicit)
 	if (!res) {
 		const notifController = notifyErrChecking(notifService);
-		metricsService.capture(`Void Update ${metricsTag}: Error`, { res })
+		metricsService.capture(`DarkOS Update ${metricsTag}: Error`, { res })
 		return notifController
 	}
 	else {
 		if (res.message) {
 			const notifController = notifyUpdate(res, notifService, updateService)
-			metricsService.capture(`Void Update ${metricsTag}: Yes`, { res })
+			metricsService.capture(`DarkOS Update ${metricsTag}: Yes`, { res })
 			return notifController
 		}
 		else {
-			metricsService.capture(`Void Update ${metricsTag}: No`, { res })
+			metricsService.capture(`DarkOS Update ${metricsTag}: No`, { res })
 			return null
 		}
 	}
@@ -176,8 +172,8 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			f1: true,
-			id: 'void.voidCheckUpdate',
-			title: localize2('voidCheckUpdate', 'Void: Check for Updates'),
+			id: 'darkos.checkUpdate',
+			title: localize2('darkosCheckUpdate', 'DarkOS: Verificar Atualizações'),
 		});
 	}
 	async run(accessor: ServicesAccessor): Promise<void> {
