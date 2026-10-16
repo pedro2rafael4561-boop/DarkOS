@@ -11,7 +11,6 @@ import { registerSingleton, InstantiationType } from '../../../../platform/insta
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { IModelService } from '../../../../editor/common/services/model.js';
-import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 
 export interface IFileChangeDiff {
 	filePath: string;
@@ -73,7 +72,6 @@ export class DarkOSCheckpointService extends Disposable implements IDarkOSCheckp
 	constructor(
 		@IFileService private readonly fileService: IFileService,
 		@IModelService private readonly modelService: IModelService,
-		@IWorkspaceContextService private readonly workspaceContextService: IWorkspaceContextService,
 	) {
 		super();
 		this._register(this._onDidChangeState);

@@ -62,7 +62,10 @@ import './miscWokrbenchContrib.js'
 import './fileService.js'
 
 // register source control management
-import './voidSCMService.js'
+import './darkosSCMService.js'
+
+// register checkpoint service
+import './darkosCheckpointService.js'
 
 // ---------- common (unclear if these actually need to be imported, because they're already imported wherever they're used) ----------
 
